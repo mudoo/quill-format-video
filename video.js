@@ -1,8 +1,6 @@
 import Quill from 'quill'
 const EmbedBlot = Quill.import('blots/block/embed')
 
-const BOOLEAN_ATTRS = ['muted', 'autoplay', 'playsinline', 'webkit-playsinline', 'loop']
-
 function sanitize (url, protocols) {
   try {
     const protocol = new URL(url).protocol.slice(0, -1)
@@ -23,6 +21,8 @@ class Video extends EmbedBlot {
   static tagName = 'VIDEO'
   static IGNORE_ATTRS = ['src', 'class', 'style']
   static PROTOCOL_WHITELIST = ['http', 'https', 'ftp']
+  static ATTRIBUTES = ['autoplay', 'controls', 'width', 'height', 'loop', 'muted', 'poster', 'preload', 'src', 'playsinline', 'webkit-playsinline', 'crossorigin']
+  static BOOLEAN_ATTRS = ['muted', 'autoplay', 'playsinline', 'webkit-playsinline', 'loop']
 
   static create (value) {
     const node = super.create()
@@ -37,7 +37,7 @@ class Video extends EmbedBlot {
       controls: true
     }, value)
 
-    BOOLEAN_ATTRS.forEach(attr => {
+    this.BOOLEAN_ATTRS.forEach(attr => {
       if (attrs[attr] != null) {
         attrs[attr] = !!attrs[attr]
       }
@@ -74,7 +74,15 @@ class Video extends EmbedBlot {
   }
 
   format (name, value) {
-    this.domNode.setAttribute(name, value || name)
+    if (this.constructor.ATTRIBUTES.indexOf(name) > -1 || name.startsWith('data-')) {
+      if (value) {
+        this.domNode.setAttribute(name, value);
+      } else {
+        this.domNode.removeAttribute(name);
+      }
+    } else {
+      super.format(name, value);
+    }
   }
 }
 
